@@ -1,10 +1,11 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
+	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Pagination from '$lib/components/Pagination.svelte';
 	import PaginationInfo from '$lib/components/PaginationInfo.svelte';
+	import StatsTable from '$lib/components/StatsTable.svelte';
 
-	let { data }: PageProps = $props();
+	let { data }: { data: PageData } = $props();
 
 	const goToPage = (cursor: string | undefined) => {
 		if (cursor === 'restart') goto(`?limit=${data.limit}`);
@@ -23,35 +24,16 @@
 
 	<p><strong>Total Clicks:</strong> <code>{data.clickCount}</code></p>
 
-	<PaginationInfo
-		limit={data.limit}
-		total={data.total}
-		currentPage={data.currentPage}
-		totalPages={data.totalPages}
-		{updateLimit}
-	/>
+	{#if data.stats.length}
+		<PaginationInfo
+			limit={data.limit}
+			total={data.total}
+			currentPage={data.currentPage}
+			totalPages={data.totalPages}
+			{updateLimit}
+		/>
 
-	{#if data.stats.length > 0}
-		<table>
-			<thead>
-				<tr>
-					<th>Timestamp</th>
-					<th>User Agent</th>
-					<th>IP</th>
-					<th>Location</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each data.stats as { timestamp, userAgent, ip, geo }}
-					<tr>
-						<td>{new Date(timestamp).toLocaleString()}</td>
-						<td>{userAgent || 'Unknown'}</td>
-						<td>{ip || 'Unknown'}</td>
-						<td>{geo || 'Unknown'}</td>
-					</tr>
-				{/each}
-			</tbody>
-		</table>
+		<StatsTable stats={data.stats} />
 
 		<Pagination
 			prevCursor={data.prevCursor}

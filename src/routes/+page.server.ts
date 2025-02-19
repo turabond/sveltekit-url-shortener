@@ -2,7 +2,7 @@ import type { Actions } from './$types';
 import { fail } from '@sveltejs/kit';
 import { KVRepository } from '$lib/server/kv';
 import { URLService } from '$lib/server/url.service';
-import { isValidUrl, isValidShortUrl, createFieldError } from '$lib/utils';
+import { isValidUrl, isValidShortUrl, createFieldError, ValidationError } from '$lib/utils';
 
 export const actions: Actions = {
 	create: async ({ request, platform }) => {
@@ -36,7 +36,7 @@ export const actions: Actions = {
 			await urlService.createShortUrl(shortUrl.toString(), originalUrl.toString());
 			return { success: true, shortUrl, originalUrl };
 		} catch (error) {
-			if ((error as Error).message === 'The short URL already exists') {
+			if (error instanceof ValidationError) {
 				return fail(400, createFieldError('shortUrl', 'The short URL already exists'));
 			}
 			return fail(500, createFieldError('', 'Internal server error'));

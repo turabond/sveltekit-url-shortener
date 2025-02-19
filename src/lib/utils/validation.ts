@@ -1,7 +1,9 @@
 export const isValidUrl = (url: string): boolean => {
 	try {
 		const newUrl = new URL(url);
-		return newUrl.protocol === 'http:' || newUrl.protocol === 'https:';
+		const hostPattern = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
+		return ['http:', 'https:'].includes(newUrl.protocol) && hostPattern.test(newUrl.hostname);
 	} catch {
 		return false;
 	}

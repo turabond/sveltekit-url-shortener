@@ -9,7 +9,7 @@
 <main class="flex flex-col min-h-screen">
 	<Header />
 
-	<div class="container flex-1">
+	<div class="container flex-1 pt-1">
 		{@render children()}
 	</div>
 
@@ -31,5 +31,9 @@
 
 	.flex-1 {
 		flex: 1;
+	}
+
+	.pt-1 {
+		padding-top: 1rem;
 	}
 </style>

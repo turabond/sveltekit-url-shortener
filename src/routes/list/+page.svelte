@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
+	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Pagination from '$lib/components/Pagination.svelte';
 	import PaginationInfo from '$lib/components/PaginationInfo.svelte';
 
-	let { data }: PageProps = $props();
+	let { data }: { data: PageData } = $props();
 
 	const goToPage = (cursor: string | undefined) => {
 		if (cursor === 'restart') goto(`/list?limit=${data.limit}`);
@@ -18,27 +18,26 @@
 </script>
 
 <section>
-	<h3>Shortened URLs</h3>
+	<h3>Shortened Links</h3>
 	<hr />
 
-	<PaginationInfo
-		limit={data.limit}
-		total={data.total}
-		currentPage={data.currentPage}
-		totalPages={data.totalPages}
-		{updateLimit}
-	/>
-
 	{#if data.urls.length > 0}
+		<PaginationInfo
+			limit={data.limit}
+			total={data.total}
+			currentPage={data.currentPage}
+			totalPages={data.totalPages}
+			{updateLimit}
+		/>
 		{#each data.urls as url}
-			<article class="short-url-card">
-				<div class="url-info">
-					<small>Shortened URL:</small>
-					<a href={'/' + url} target="_blank" class="short-url">{url}</a>
+			<article>
+				<div>
+					<small>Shortened Link:</small>
+					<a href={'/' + url} target="_blank">{url}</a>
 				</div>
-				<div class="actions">
+				<div>
 					<small>View analytics:</small>
-					<a href={'/' + url + '/stats'} class="stats-btn">Stats & Click Data</a>
+					<a href={'/' + url + '/stats'}>Stats & Click Data</a>
 				</div>
 			</article>
 		{/each}
@@ -50,6 +49,6 @@
 			{goToPage}
 		/>
 	{:else}
-		<p>No URLs found.</p>
+		<p>No links available yet.</p>
 	{/if}
 </section>

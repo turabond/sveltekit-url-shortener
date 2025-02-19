@@ -1,3 +1,4 @@
+import { ValidationError } from '$lib/utils';
 import type { ClickStat } from '../types';
 import type { KVRepository } from './kv';
 
@@ -45,7 +46,7 @@ export class URLService {
 		const existing = await this.kv.get<string>(key);
 
 		if (existing) {
-			throw new Error('The short URL already exists');
+			throw new ValidationError('shortUrl', 'The short URL already exists');
 		}
 
 		await this.kv.set(key, originalUrl);
