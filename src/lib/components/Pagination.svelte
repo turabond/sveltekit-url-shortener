@@ -1,20 +1,19 @@
 <script lang="ts">
 	interface PaginationProps {
-		prevCursor?: string;
-		nextCursor?: string;
-		limit: number;
-		goToPage: (cursor?: string) => void;
+		page: number;
+		pages: number;
+		goToPage: (page: number) => void;
 	}
 
-	let { prevCursor, nextCursor, goToPage }: PaginationProps = $props();
+	let { page, pages, goToPage }: PaginationProps = $props();
 </script>
 
 <div class="pagination">
-	<button type="button" class="outline" onclick={() => goToPage(prevCursor)} disabled={!prevCursor}>
+	<button type="button" class="outline" onclick={() => goToPage(page - 1)} disabled={page <= 1}>
 		Previous
 	</button>
 
-	<button type="button" class="outline" onclick={() => goToPage(nextCursor)} disabled={!nextCursor}>
+	<button type="button" class="outline" onclick={() => goToPage(page + 1)} disabled={page >= pages}>
 		Next
 	</button>
 </div>

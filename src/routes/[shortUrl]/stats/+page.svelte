@@ -7,14 +7,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const goToPage = (cursor: string | undefined) => {
-		if (cursor === 'restart') goto(`?limit=${data.limit}`);
-		if (cursor && cursor !== 'restart') goto(`?cursor=${cursor}&limit=${data.limit}`);
+	const goToPage = (page: number) => {
+		goto(`?page=${page}&limit=${data.limit}`);
 	};
 
 	const updateLimit = (event: Event) => {
 		const newLimit = (event.target as HTMLSelectElement).value;
-		goto(`?limit=${newLimit}`);
+		goto(`?page=${data.page}&limit=${newLimit}`);
 	};
 </script>
 
@@ -28,19 +27,14 @@
 		<PaginationInfo
 			limit={data.limit}
 			total={data.total}
-			currentPage={data.currentPage}
-			totalPages={data.totalPages}
+			page={data.page}
+			pages={data.pages}
 			{updateLimit}
 		/>
 
 		<StatsTable stats={data.stats} />
 
-		<Pagination
-			prevCursor={data.prevCursor}
-			nextCursor={data.nextCursor}
-			limit={data.limit}
-			{goToPage}
-		/>
+		<Pagination page={data.page} pages={data.pages} {goToPage} />
 	{:else}
 		<p>No statistics available yet.</p>
 	{/if}

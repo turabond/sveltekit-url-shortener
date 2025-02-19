@@ -6,14 +6,13 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const goToPage = (cursor: string | undefined) => {
-		if (cursor === 'restart') goto(`/list?limit=${data.limit}`);
-		if (cursor && cursor !== 'restart') goto(`/list?cursor=${cursor}&limit=${data.limit}`);
+	const goToPage = (page: number) => {
+		goto(`/list?page=${page}&limit=${data.limit}`);
 	};
 
 	const updateLimit = (event: Event) => {
 		const newLimit = (event.target as HTMLSelectElement).value;
-		goto(`/list?limit=${newLimit}`);
+		goto(`/list?page=1&limit=${newLimit}`);
 	};
 </script>
 
@@ -21,33 +20,29 @@
 	<h3>Shortened Links</h3>
 	<hr />
 
-	{#if data.urls.length > 0}
+	{#if data.links.length > 0}
 		<PaginationInfo
 			limit={data.limit}
 			total={data.total}
-			currentPage={data.currentPage}
-			totalPages={data.totalPages}
+			page={data.page}
+			pages={data.pages}
 			{updateLimit}
 		/>
-		{#each data.urls as url}
+
+		{#each data.links as link}
 			<article>
 				<div>
 					<small>Shortened Link:</small>
-					<a href={'/' + url} target="_blank">{url}</a>
+					<a href={'/' + link} target="_blank">{link}</a>
 				</div>
 				<div>
 					<small>View analytics:</small>
-					<a href={'/' + url + '/stats'}>Stats & Click Data</a>
+					<a href={'/' + link + '/stats'}>Stats & Click Data</a>
 				</div>
 			</article>
 		{/each}
 
-		<Pagination
-			prevCursor={data.prevCursor}
-			nextCursor={data.nextCursor}
-			limit={data.limit}
-			{goToPage}
-		/>
+		<Pagination page={data.page} pages={data.pages} {goToPage} />
 	{:else}
 		<p>No links available yet.</p>
 	{/if}

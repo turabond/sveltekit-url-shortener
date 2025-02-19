@@ -2,20 +2,20 @@
 	interface PaginationInfoProps {
 		limit: number;
 		total: number;
-		currentPage: number;
-		totalPages: number;
+		page: number;
+		pages: number;
 		updateLimit: (event: Event) => void;
 	}
 
-	let { limit, total, currentPage, totalPages, updateLimit }: PaginationInfoProps = $props();
+	let { limit, total, page, pages, updateLimit }: PaginationInfoProps = $props();
 </script>
 
 <div class="pagination-info">
 	<div class="pagination-info-text">
 		<div>
-			Total: <code>{total}</code> | Showing <code>{limit}</code> per page | Items Page
-			<code>{currentPage}</code>
-			of <code>{totalPages}</code>
+			Total: <code>{total}</code> | Showing <code>{limit}</code> per page | Page
+			<code>{page}</code>
+			of <code>{pages}</code>
 		</div>
 	</div>
 
@@ -29,6 +29,8 @@
 		<option value="20" selected={limit === 20}>20 per page</option>
 		<option value="50" selected={limit === 50}>50 per page</option>
 		<option value="100" selected={limit === 100}>100 per page</option>
+		<option value="1000" selected={limit === 1000}>1000 per page</option>
+		<option value="3000" selected={limit === 3000}>3000 per page</option>
 	</select>
 </div>
 

@@ -1,5 +1,5 @@
 import type { Actions } from './$types';
-import { fail } from '@sveltejs/kit';
+import { fail, error } from '@sveltejs/kit';
 import { KVRepository } from '$lib/server/kv';
 import { URLService } from '$lib/server/url.service';
 import { isValidUrl, isValidShortUrl, createFieldError, ValidationError } from '$lib/utils';
@@ -7,7 +7,7 @@ import { isValidUrl, isValidShortUrl, createFieldError, ValidationError } from '
 export const actions: Actions = {
 	create: async ({ request, platform }) => {
 		if (!platform || !platform.env || !platform.env.URL_SHORTENER_KV) {
-			throw new Error('Platform or URL_SHORTENER_KV is not defined');
+			throw error(404, 'Platform or URL_SHORTENER_KV is not defined');
 		}
 
 		const kv = new KVRepository(platform.env.URL_SHORTENER_KV);

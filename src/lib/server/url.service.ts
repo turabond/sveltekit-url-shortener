@@ -2,10 +2,6 @@ import { ValidationError } from '$lib/utils';
 import type { ClickStat } from '../types';
 import type { KVRepository } from './kv';
 
-// TODO: this is not good solution, and should be refactored
-// this is needed to keep track of the cursor history for pagination
-const cursorHistory: Map<string, string[]> = new Map();
-
 export class URLService {
 	private readonly kv: KVRepository;
 
@@ -19,26 +15,88 @@ export class URLService {
 		await this.kv.set(counterKey, currentCount + 1);
 	}
 
-	private updateCursorHistory(prefix: string, cursor?: string, nextCursor?: string) {
-		if (!cursorHistory.has(prefix)) {
-			cursorHistory.set(prefix, []);
+	private async getPaginatedKeys(
+		prefix?: string,
+		page = 1,
+		limit?: number
+	): Promise<{
+		total: number;
+		page: number;
+		pages: number;
+		keys: string[];
+		limit: number;
+	}> {
+		const allKeys = await this.kv.listAllKeys(prefix);
+
+		if (!limit) {
+			return {
+				page: 1,
+				pages: 1,
+				total: allKeys.length,
+				limit: allKeys.length,
+				keys: allKeys
+			};
 		}
 
-		const history = cursorHistory.get(prefix)!;
+		const offset = (page - 1) * limit;
+		const pages = Math.ceil(allKeys.length / limit);
+		const total = allKeys.length;
+		const keys = allKeys.slice(offset, offset + limit);
 
-		if (!cursor) {
-			cursorHistory.set(prefix, []);
-		}
+		return {
+			page,
+			pages,
+			total,
+			limit,
+			keys
+		};
+	}
 
-		if (cursor && !history.includes(cursor)) {
-			history.push(cursor);
-		}
+	async getShortLinksByPageAndLimit(
+		page = 1,
+		limit = 100
+	): Promise<{
+		page: number;
+		pages: number;
+		total: number;
+		limit: number;
+		links: string[];
+	}> {
+		const { keys, ...rest } = await this.getPaginatedKeys('short:', page, limit);
+		return {
+			...rest,
+			links: keys.map((key) => key.replace(/^short:/, ''))
+		};
+	}
 
-		if (nextCursor && !history.includes(nextCursor)) {
-			history.push(nextCursor);
-		}
+	async getLinkStatsByPageAndLimit(
+		shortUrl: string,
+		page = 1,
+		limit = 100
+	): Promise<{
+		page: number;
+		pages: number;
+		total: number;
+		limit: number;
+		stats: ClickStat[];
+	}> {
+		const prefix = `stats:${shortUrl}:`;
+		const {
+			keys,
+			total,
+			page: currentPage,
+			pages: totalPages
+		} = await this.getPaginatedKeys(prefix, page, limit);
 
-		return history;
+		const stats = await Promise.all(keys.map((key) => this.kv.getMetadata<ClickStat>(key)));
+
+		return {
+			page: currentPage,
+			pages: totalPages,
+			total,
+			limit,
+			stats: stats.filter((stat): stat is ClickStat => stat !== null)
+		};
 	}
 
 	async createShortUrl(shortUrl: string, originalUrl: string): Promise<void> {
@@ -77,69 +135,6 @@ export class URLService {
 		});
 
 		await this.incrementClickCount(shortUrl);
-	}
-
-	async getStats(
-		shortUrl: string,
-		limit = 100,
-		cursor?: string
-	): Promise<{
-		stats: ClickStat[];
-		nextCursor?: string;
-		prevCursor?: string;
-		total: number;
-		currentPage: number;
-		totalPages: number;
-	}> {
-		const prefix = `stats:${shortUrl}:`;
-		const { keys, nextCursor, total } = await this.kv.list(prefix, limit, cursor);
-		const stats = await Promise.all(keys.map((key) => this.kv.getMetadata<ClickStat>(key)));
-
-		const history = this.updateCursorHistory(prefix, cursor, nextCursor);
-
-		const totalPages = Math.ceil(total / limit);
-		const cursorIndex = cursor ? history.indexOf(cursor) : -1;
-		const prevCursor = cursorIndex > 0 ? history[cursorIndex - 1] : cursor ? 'restart' : undefined;
-		const currentPage = cursorIndex + 2;
-
-		return {
-			stats: stats.filter((stat): stat is ClickStat => stat !== null),
-			nextCursor,
-			prevCursor,
-			total,
-			currentPage,
-			totalPages
-		};
-	}
-
-	async listAllShortUrls(
-		limit = 100,
-		cursor?: string
-	): Promise<{
-		urls: string[];
-		nextCursor?: string;
-		prevCursor?: string | 'restart';
-		total: number;
-		currentPage: number;
-		totalPages: number;
-	}> {
-		const prefix = 'short:';
-		const { keys, nextCursor, total } = await this.kv.list(prefix, limit, cursor);
-		const history = this.updateCursorHistory(prefix, cursor, nextCursor);
-
-		const totalPages = Math.ceil(total / limit);
-		const cursorIndex = cursor ? history.indexOf(cursor) : -1;
-		const prevCursor = cursorIndex > 0 ? history[cursorIndex - 1] : cursor ? 'restart' : undefined;
-		const currentPage = cursorIndex + 2;
-
-		return {
-			urls: keys.map((key) => key.replace(/^short:/, '')),
-			nextCursor,
-			prevCursor,
-			currentPage,
-			totalPages,
-			total
-		};
 	}
 
 	async deleteAll(): Promise<void> {

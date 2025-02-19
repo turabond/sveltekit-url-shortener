@@ -25,6 +25,20 @@ export class KVRepository {
 		return data?.metadata ?? null;
 	}
 
+	async listAllKeys(prefix?: string): Promise<string[]> {
+		let keys: string[] = [];
+		let cursor: string | undefined = undefined;
+
+		do {
+			const response: { keys: { name: string }[]; cursor?: string; list_complete: boolean } =
+				await this.kv.list({ prefix, cursor, limit: 1000 });
+			keys = keys.concat(response.keys.map((key) => key.name));
+			cursor = response.cursor;
+		} while (cursor);
+
+		return keys;
+	}
+
 	async list(
 		prefix: string,
 		limit = 1000,

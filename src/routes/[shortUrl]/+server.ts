@@ -1,10 +1,10 @@
-import { redirect, type RequestHandler } from '@sveltejs/kit';
+import { redirect, error, type RequestHandler } from '@sveltejs/kit';
 import { URLService } from '$lib/server/url.service';
 import { KVRepository } from '$lib/server/kv';
 
 export const GET: RequestHandler = async ({ params, platform, request }) => {
 	if (!platform || !platform.env || !platform.env.URL_SHORTENER_KV) {
-		throw new Error('Platform or URL_SHORTENER_KV is not defined');
+		throw error(404, 'Platform or URL_SHORTENER_KV is not defined');
 	}
 
 	const kv = new KVRepository(platform.env.URL_SHORTENER_KV);
